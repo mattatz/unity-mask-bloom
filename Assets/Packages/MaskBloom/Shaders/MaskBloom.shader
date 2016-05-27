@@ -60,12 +60,17 @@
 			return OUT;
 		}
 
-		float4 fragDownsample(vs2psDown IN) : COLOR{
+		float4 fragDownsample(vs2psDown IN) : COLOR {
 			float4 c = 0;
 			for (uint i = 0; i < 4; i++) {
 				c += tex2D(_MainTex, IN.uv[i]) * 0.25;
 			}
 			return c;
+		}
+
+		float4 fragMask(v2f IN) : COLOR {
+			float4 c = tex2D(_MainTex, IN.uv[0]);
+			return c * c.a;
 		}
 
 		vs2psBlur vertBlurH(vsin IN) {
@@ -90,7 +95,7 @@
 			float4 c = 0;
 			for (uint i = 0; i < 8; i++) {
 				float4 col = tex2D(_MainTex, IN.uv[i]);
-				c += col * col.a * WEIGHTS[i];
+				c += col * WEIGHTS[i];
 			}
 			return c;
 		}
@@ -139,7 +144,15 @@
 			ENDCG
 		}
 
-		// 1 : Horizontal Separable Gaussian
+		// 1 : Mask
+		Pass {
+			CGPROGRAM
+			#pragma vertex vert
+			#pragma fragment fragMask
+			ENDCG
+		}
+
+		// 2 : Horizontal Separable Gaussian
 		Pass {
 			CGPROGRAM
 			#pragma vertex vertBlurH
@@ -147,7 +160,7 @@
 			ENDCG
 		}
 
-		// 2 : Vertical Separable Gaussian
+		// 3 : Vertical Separable Gaussian
 		Pass {
 			CGPROGRAM
 			#pragma vertex vertBlurV
@@ -155,7 +168,7 @@
 			ENDCG
 		}
 
-		// 3 : Bloom (Screen)
+		// 4 : Bloom (Screen)
 		Pass {
 			CGPROGRAM
 			#pragma vertex vert
@@ -163,7 +176,7 @@
 			ENDCG
 		}
 
-		// 4 : Bloom (Add)
+		// 5 : Bloom (Add)
 		Pass {
 			CGPROGRAM
 			#pragma vertex vert

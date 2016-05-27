@@ -40,7 +40,7 @@ namespace mattatz.MaskBloom {
             var downSampled = DownSample(src, blurDownSample);
             Blur(downSampled, blurIterations);
 
-            if(debug) {
+            if (debug) {
                 Graphics.Blit(downSampled, dst);
                 RenderTexture.ReleaseTemporary(downSampled);
                 return;
@@ -53,15 +53,15 @@ namespace mattatz.MaskBloom {
             switch (type)
             {
                 case BloomType.Screen:
-                    Graphics.Blit(src, dst, material, 3);
-                    break;
-
-                case BloomType.Add:
                     Graphics.Blit(src, dst, material, 4);
                     break;
 
+                case BloomType.Add:
+                    Graphics.Blit(src, dst, material, 5);
+                    break;
+
                 default:
-                    Graphics.Blit(src, dst, material, 3);
+                    Graphics.Blit(src, dst, material, 4);
                     break;
             }
 
@@ -75,7 +75,7 @@ namespace mattatz.MaskBloom {
 
             Graphics.Blit(src, tmp0);
             for (var i = 0; i < iters; i++) {
-                for (var pass = 1; pass < 3; pass++) {
+                for (var pass = 2; pass < 4; pass++) {
                     tmp1.DiscardContents();
                     tmp0.filterMode = FilterMode.Bilinear;
                     Graphics.Blit(tmp0, tmp1, material, pass);
@@ -103,7 +103,11 @@ namespace mattatz.MaskBloom {
                 dst = tmp;
             }
 
-            return dst;
+            var mask = RenderTexture.GetTemporary(dst.width, dst.height, 0, dst.format);
+            mask.filterMode = FilterMode.Bilinear;
+            Graphics.Blit(dst, mask, material, 1); // masking
+            RenderTexture.ReleaseTemporary(dst);
+            return mask;
         }
 
     }
